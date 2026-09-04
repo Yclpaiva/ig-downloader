@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "IG Downloader",
+  "version": "0.1.0",
+  "description": "Botão de download sobre vídeos, fotos, reels, stories e fotos de perfil do Instagram.",
+  "permissions": ["downloads"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.instagram.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
