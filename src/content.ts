@@ -26,7 +26,7 @@ type State = keyof typeof ICONS;
 const STYLE = `
   button { all: unset; box-sizing: border-box; width: 32px; height: 32px; border-radius: 50%;
     background: rgba(0,0,0,.6); color: #fff; display: grid; place-items: center; cursor: pointer;
-    opacity: .85; transition: opacity .15s, background .15s; backdrop-filter: blur(4px); }
+    opacity: .85; transition: opacity .15s, background .15s; }
   button:hover { opacity: 1; background: rgba(0,0,0,.85); }
   button[data-state="loading"] svg { animation: spin .8s linear infinite; }
   button[data-state="done"] { background: #1f8a4c; }
@@ -175,10 +175,14 @@ function mount(frame: HTMLElement, getContext: () => Context | null): HTMLElemen
 
 // --- scanning ----------------------------------------------------------------
 
+/** Images still loading render blank; a button over them looks like a broken grid. */
+const isPending = (media: HTMLElement) =>
+  media instanceof HTMLImageElement && !(media.complete && media.naturalWidth > 0);
+
 function scan() {
   if (/^\/(direct|accounts)\//.test(location.pathname)) return;
   for (const media of document.querySelectorAll<HTMLElement>("img, video")) {
-    if (hosts.get(media)?.isConnected) continue;
+    if (hosts.get(media)?.isConnected || isPending(media)) continue;
     const rect = media.getBoundingClientRect();
     if (rect.width < MIN_SIZE || rect.height < MIN_SIZE) continue;
     const getContext = contextFor(media);
@@ -200,4 +204,6 @@ function schedule() {
 new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
 window.addEventListener("scroll", schedule, { passive: true });
 window.addEventListener("resize", schedule);
+// `load` doesn't bubble; capture it so images that finish loading get their button.
+document.addEventListener("load", schedule, true);
 schedule();
